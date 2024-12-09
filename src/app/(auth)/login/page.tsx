@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,8 +7,14 @@ import { FaGoogle } from "react-icons/fa";
 import React from "react";
 import { FaGithub } from "react-icons/fa";
 import { login } from "@/actions/user";
+import { signIn } from "@/auth";
+// import { redirect } from "next/navigation";
+import useGetSession from "@/lib/useGetSession";
 
-const LoginPage = () => {
+const LoginPage = async () => {
+  const session = await useGetSession();
+  console.log("🚀 ~ LoginPage ~ session:", session);
+
   return (
     <section className="flex h-screen items-center justify-center bg-gray-100">
       <div className="w-[20rem] bg-white p-6 rounded-lg shadow-md">
@@ -56,14 +63,37 @@ const LoginPage = () => {
           </Link>
         </p>
         <div className="social_link_btn flex flex-col gap-2">
-          <button className="gap-2 justify-center w-full items-center flex hover:bg-gray-200  bg-white  border border-gray-300 rounded-lg shadow-md px-6 py-2 text-sm font-medium text-gray-800 dark:text-white ">
-            <FaGoogle size={25} />
-            <span>Continue with Google</span>
-          </button>
-          <button className=" gap-2 justify-center w-full items-center flex hover:bg-gray-200   bg-white  border border-gray-300 rounded-lg shadow-md px-6 py-2 text-sm font-medium text-gray-800 dark:text-white ">
-            <FaGithub size={25} />
-            <span>Continue with GitHub</span>
-          </button>
+          {/* google btn */}
+          <div>
+            <form
+              action={async () => {
+                "use server";
+                await signIn("google");
+              }}
+            >
+              <button className="gap-2 justify-center w-full items-center flex hover:bg-gray-200  bg-white  border border-gray-300 rounded-lg shadow-md px-6 py-2 text-sm font-medium text-gray-800 dark:text-white ">
+                <FaGoogle size={25} />
+                <span>Continue with Google</span>
+              </button>
+            </form>
+          </div>
+          {/* github btn */}
+          <div>
+            <form
+              action={async () => {
+                "use server";
+                await signIn("github");
+              }}
+            >
+              <button
+                type="submit"
+                className=" gap-2 justify-center w-full items-center flex hover:bg-gray-200   bg-white  border border-gray-300 rounded-lg shadow-md px-6 py-2 text-sm font-medium text-gray-800 dark:text-white "
+              >
+                <FaGithub size={25} />
+                <span>Continue with GitHub</span>
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </section>
