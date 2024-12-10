@@ -16,7 +16,6 @@ export interface userType {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  debug: !!process.env.AUTH_DEBUG,
   providers: [
     // Google provider
     GoogleProvider({
@@ -32,19 +31,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     // Credential provider
     CredentialsProvider({
+      id: "credentials",
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        try {
-          const user = await validateUser(credentials);
-          if (user) return user;
+        const user = await validateUser(credentials);
+        if (!user) {
           throw new Error("Invalid email or password");
-        } catch (error: any) {
-          throw new Error(error.message || "Authentication failed");
         }
+
+        return {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          image: user.image,
+        };
       },
     }),
   ],
@@ -54,21 +59,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token._id = user._id;
+        token.image = user.image ?? "";
+        token.role = user.role ?? "user";
+        token.authProviderId = user.authProviderId ?? "";
+      }
+      return token;
+    },
+
     async session({ session, token }) {
-      if (token?.id) {
-        session.user.id = token.id;
-        session.user.role = token.role || "user";
+      // Pass token fields to the session user object
+      if (token) {
+        session.user._id = token._id as string;
+        session.user.image = token.image as string;
+        session.user.role = token.role as string;
+        session.user.authProviderId = token.authProviderId as string;
       }
       return session;
     },
 
-    async jwt({ token, user, account, profile }) {
-      if (account && profile) {
-        token.id = profile.id || user?.id;
-        token.role = token.role || "user";
-      }
-      return token;
-    },
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
@@ -79,7 +90,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             { name, image, authProviderId: id },
             { upsert: true, new: true }
           );
-          return !!existingUser;
+
+          user._id = existingUser?._id;
+          user.authProviderId = existingUser?.authProviderId;
+          return true;
         } catch (error) {
           console.error("Google sign-in error:", error);
           throw new Error("Error while processing Google sign-in");

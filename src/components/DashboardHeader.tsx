@@ -13,7 +13,7 @@ const DashboardHeader = ({ user }: UserProps) => {
       <figure className="relative flex flex-col-reverse bg-slate-100 rounded-lg p-6 dark:bg-slate-800 dark:highlight-white/5">
         <figcaption className="flex items-center space-x-4">
           <Image
-            src={image || "/default-avatar.png"}
+            src={image || ""}
             alt={`${name}'s profile picture`}
             className="flex-none w-14 h-14 rounded-full object-cover"
             loading="lazy"
