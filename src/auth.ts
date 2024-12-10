@@ -7,6 +7,14 @@ import dbConnect from "./lib/db";
 import { User } from "./models/user.model";
 import { validateUser } from "./lib/validateUser";
 
+export interface userType {
+  name?: string | null;
+  image?: string | null;
+  email?: string | null;
+  id?: string | null;
+  role?: string | null;
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   debug: !!process.env.AUTH_DEBUG,
   providers: [
@@ -47,8 +55,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   callbacks: {
     async session({ session, token }) {
-      if (token?.sub) {
-        session.user.id = token.sub;
+      if (token?.id) {
+        session.user.id = token.id;
         session.user.role = token.role || "user";
       }
       return session;
@@ -64,11 +72,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
-          const { email, name, image } = user;
+          const { email, name, image, id } = user;
           await dbConnect();
           const existingUser = await User.findOneAndUpdate(
             { email },
-            { name, image },
+            { name, image, authProviderId: id },
             { upsert: true, new: true }
           );
           return !!existingUser;
