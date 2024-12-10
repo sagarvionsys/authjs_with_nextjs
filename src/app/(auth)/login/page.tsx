@@ -8,12 +8,12 @@ import React from "react";
 import { FaGithub } from "react-icons/fa";
 import { login } from "@/actions/user";
 import { signIn } from "@/auth";
-// import { redirect } from "next/navigation";
 import useGetSession from "@/lib/useGetSession";
+import { redirect } from "next/navigation";
 
 const LoginPage = async () => {
   const session = await useGetSession();
-  console.log("🚀 ~ LoginPage ~ session:", session);
+  if (session?.user) redirect("/dashboard");
 
   return (
     <section className="flex h-screen items-center justify-center bg-gray-100">
@@ -68,7 +68,7 @@ const LoginPage = async () => {
             <form
               action={async () => {
                 "use server";
-                await signIn("google");
+                await signIn("google", { redirectTo: "/dashboard" });
               }}
             >
               <button className="gap-2 justify-center w-full items-center flex hover:bg-gray-200  bg-white  border border-gray-300 rounded-lg shadow-md px-6 py-2 text-sm font-medium text-gray-800 dark:text-white ">
@@ -82,7 +82,7 @@ const LoginPage = async () => {
             <form
               action={async () => {
                 "use server";
-                await signIn("github");
+                await signIn("github", { redirectTo: "/dashboard" });
               }}
             >
               <button

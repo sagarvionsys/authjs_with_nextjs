@@ -5,8 +5,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { registerUser } from "@/actions/user";
+import useGetSession from "@/lib/useGetSession";
+import { redirect } from "next/navigation";
 
-const RegisterPage = () => {
+const RegisterPage = async () => {
+  const session = await useGetSession();
+  if (session?.user) redirect("/dashboard");
+
   return (
     <section className="flex h-screen items-center justify-center bg-gray-100">
       <div className="w-[20rem] bg-white p-6 rounded-lg shadow-md">

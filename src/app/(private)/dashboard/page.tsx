@@ -1,3 +1,5 @@
+import useGetSession from "@/lib/useGetSession";
+import { redirect } from "next/navigation";
 import { AiOutlineArrowUp, AiOutlineArrowDown } from "react-icons/ai";
 
 const stats = [
@@ -21,7 +23,11 @@ const stats = [
   },
 ];
 
-const DashboardPage = () => {
+const DashboardPage = async () => {
+  const session = await useGetSession();
+  console.log("🚀 ~ DashboardPage ~ session:", session);
+  if (!session?.user) redirect("/login");
+
   return (
     <div className="h-screen dark:bg-gray-800 flex justify-center items-center">
       <section className="grid gap-6 md:grid-cols-3 p-4 md:p-8 max-w-5xl mx-auto w-full">

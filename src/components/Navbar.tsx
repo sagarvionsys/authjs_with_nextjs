@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "./ui/button";
+import { logoutUser } from "@/actions/user";
 
 const Header = () => {
   const pathName = usePathname();
@@ -57,7 +58,7 @@ const Header = () => {
             >
               settings
             </Link>
-            <form>
+            <form action={logoutUser}>
               <Button type="submit" variant={"ghost"}>
                 logout
               </Button>

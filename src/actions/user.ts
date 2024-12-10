@@ -1,6 +1,6 @@
 "use server";
 
-import { signIn } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import dbConnect from "@/lib/db";
 import { User } from "@/models/user.model";
 import bcrypt from "bcryptjs";
@@ -55,4 +55,7 @@ const login = async (formData: FormData) => {
   }
 };
 
-export { registerUser, login };
+const logoutUser = async () => {
+  await signOut();
+};
+export { registerUser, login, logoutUser };

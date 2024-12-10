@@ -1,28 +1,29 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import Github from "next-auth/providers/github";
-import Google from "next-auth/providers/google";
-import { validateUser } from "./lib/validateUser";
+import CredentialsProvider from "next-auth/providers/credentials";
+import GithubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 import dbConnect from "./lib/db";
 import { User } from "./models/user.model";
+import { validateUser } from "./lib/validateUser";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  debug: !!process.env.AUTH_DEBUG,
   providers: [
-    // google provider
-    Google({
+    // Google provider
+    GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     }),
 
-    // github provider
-    Github({
+    // Github provider
+    GithubProvider({
       clientId: process.env.GITHUB_CLIENT_ID as string,
       clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
     }),
 
-    // credential provider
-    Credentials({
+    // Credential provider
+    CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -31,56 +32,65 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       authorize: async (credentials) => {
         try {
           const user = await validateUser(credentials);
-          return user;
+          if (user) return user;
+          throw new Error("Invalid email or password");
         } catch (error: any) {
           throw new Error(error.message || "Authentication failed");
         }
       },
     }),
   ],
+
   pages: {
     signIn: "/login",
   },
+
   callbacks: {
     async session({ session, token }) {
-      if (token?.sub && token?.role) {
+      if (token?.sub) {
         session.user.id = token.sub;
-        session.user.role = token.role;
+        session.user.role = token.role || "user";
       }
       return session;
     },
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role;
+
+    async jwt({ token, user, account, profile }) {
+      if (account && profile) {
+        token.id = profile.id || user?.id;
+        token.role = token.role || "user";
       }
       return token;
     },
-    signIn: async ({ user, account }) => {
+    async signIn({ user, account }) {
       if (account?.provider === "google") {
         try {
-          const { email, name, image, id } = user;
+          const { email, name, image } = user;
           await dbConnect();
-          const alreadyUser = await User.findOne({ email });
-
-          if (!alreadyUser) {
-            await User.create({
-              email,
-              name,
-              image,
-              authProviderId: id,
-            });
-          } else {
-            return true;
-          }
+          const existingUser = await User.findOneAndUpdate(
+            { email },
+            { name, image },
+            { upsert: true, new: true }
+          );
+          return !!existingUser;
         } catch (error) {
-          throw new Error("Something went wrong while creating user");
+          console.error("Google sign-in error:", error);
+          throw new Error("Error while processing Google sign-in");
         }
       }
       if (account?.provider === "credentials") {
         return true;
-      } else {
-        return false;
       }
+      return false;
     },
+  },
+
+  session: {
+    strategy: "jwt",
+    maxAge: 15 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
+  },
+
+  theme: {
+    colorScheme: "auto",
   },
 });
