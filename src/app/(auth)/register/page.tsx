@@ -1,16 +1,26 @@
+"use client";
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { registerUser } from "@/actions/user";
-import useGetSession from "@/lib/useGetSession";
-import { redirect } from "next/navigation";
+import useRegisterUser from "@/features/useRegisterUser";
 
-const RegisterPage = async () => {
-  const session = await useGetSession();
-  if (session?.user) redirect("/dashboard");
+const RegisterPage = () => {
+  const { registerUser, registerUserPending } = useRegisterUser();
+
+  // handle register user
+  const registerUserHandle = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    registerUser(formData, {
+      onSettled: () => {
+        form.reset();
+      },
+    });
+  };
 
   return (
     <section className="flex h-screen items-center justify-center bg-gray-100">
@@ -18,7 +28,7 @@ const RegisterPage = async () => {
         <h1 className="text-2xl font-semibold py-3">
           Welcome to Register Page
         </h1>
-        <form action={registerUser}>
+        <form onSubmit={registerUserHandle}>
           <div className="mb-4">
             <Label
               htmlFor="userName"
@@ -70,8 +80,11 @@ const RegisterPage = async () => {
             <Label htmlFor="terms">Accept terms and conditions</Label>
           </div>
 
-          <Button className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">
-            Register
+          <Button
+            disabled={registerUserPending}
+            className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
+          >
+            {registerUserPending ? "Registering..." : "Register"}
           </Button>
         </form>
         <p className="py-2 text-sm">

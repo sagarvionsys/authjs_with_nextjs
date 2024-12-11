@@ -1,6 +1,5 @@
 import DashboardHeader from "@/components/DashboardHeader";
 import useGetSession from "@/lib/useGetSession";
-import { redirect } from "next/navigation";
 import { AiOutlineArrowUp, AiOutlineArrowDown } from "react-icons/ai";
 
 const stats = [
@@ -26,8 +25,6 @@ const stats = [
 
 const DashboardPage = async () => {
   const session = await useGetSession();
-  console.log("🚀 ~ DashboardPage ~ session:", session);
-  if (!session?.user) redirect("/login");
 
   return (
     <>

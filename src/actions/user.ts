@@ -4,7 +4,6 @@ import { signIn, signOut } from "@/auth";
 import dbConnect from "@/lib/db";
 import { User } from "@/models/user.model";
 import bcrypt from "bcryptjs";
-import { CredentialsSignin } from "next-auth";
 
 // register for user
 const registerUser = async (formData: FormData) => {
@@ -24,14 +23,16 @@ const registerUser = async (formData: FormData) => {
     const salt = bcrypt.genSaltSync(10);
     const hashedPassword = bcrypt.hashSync(password, salt);
 
-    const user = await User.create({
+    await User.create({
       userName,
       email,
       password: hashedPassword,
     });
-    console.log(user);
-  } catch (error) {
-    console.log("error while registering user", error);
+
+    return { message: "User registered successfully", status: 200 };
+  } catch (error: any) {
+    console.error("Error while registering user", error);
+    throw new Error(error.message || "Internal Server Error");
   }
 };
 
@@ -42,20 +43,29 @@ const login = async (formData: FormData) => {
     const password = formData.get("password") as string;
 
     if (!email || !password) throw new Error("Email and password are required");
+
     await signIn("credentials", {
       redirect: false,
       callbackUrl: "/dashboard",
       email,
       password,
     });
-    console.log("user logged successfully");
-  } catch (error) {
-    const Error = error as CredentialsSignin;
-    console.log(Error.cause);
+
+    return { message: "User logged successfully", status: 200 };
+  } catch (error: any) {
+    // const error = err as CredentialsSignin;
+    throw new Error(error?.cause?.err || "Internal Server Error");
   }
 };
 
+// logout for user
 const logoutUser = async () => {
-  await signOut();
+  await signOut({ redirectTo: "/login" });
 };
-export { registerUser, login, logoutUser };
+
+// handle oAuth login
+const oAuthLogin = async (provider: string) => {
+  await signIn(provider, { redirectTo: "/dashboard" });
+};
+
+export { registerUser, login, logoutUser, oAuthLogin };
