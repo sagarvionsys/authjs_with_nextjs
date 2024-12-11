@@ -81,6 +81,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     async signIn({ user, account }) {
+      // google signIn
       if (account?.provider === "google") {
         try {
           const { email, name, image, id } = user;
@@ -99,6 +100,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error("Error while processing Google sign-in");
         }
       }
+      // github signIn
+      if (account?.provider === "github") {
+        try {
+          const { email, name, image, id } = user;
+          await dbConnect();
+          const existingUser = await User.findOneAndUpdate(
+            { email },
+            { name, image, authProviderId: id },
+            { upsert: true, new: true }
+          );
+
+          user._id = existingUser?._id;
+          user.authProviderId = existingUser?.authProviderId;
+          return true;
+        } catch (error) {
+          console.error("github sign-in error:", error);
+          throw new Error("Error while processing github sign-in");
+        }
+      }
+      // provider signIn
       if (account?.provider === "credentials") {
         return true;
       }
