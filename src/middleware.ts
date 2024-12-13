@@ -13,12 +13,21 @@ export default auth((req) => {
   if (!isAuthenticated && routes.protected.includes(pathname)) {
     return Response.redirect(new URL("/login", origin));
   }
+
   // Redirect authenticated users trying to access public routes
   if (isAuthenticated && routes.public.includes(pathname)) {
     return Response.redirect(new URL("/dashboard", origin));
   }
+
+  // Redirect unauthenticated users trying to access protected api routes
+  if (!isAuthenticated && pathname.startsWith("/api/protected")) {
+    return Response.json(
+      { message: "you are Not authenticated" },
+      { status: 401 }
+    );
+  }
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
