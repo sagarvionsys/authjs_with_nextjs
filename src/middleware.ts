@@ -1,24 +1,24 @@
-export { default } from "next-auth/middleware";
-import { getToken } from "next-auth/jwt";
-import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 
-const isProtectedRoutes = ["/dashboard", "/settings"];
-const isPublicRoutes = ["/login", "/register"];
-export async function middleware(request: NextRequest) {
-  const token = await getToken({ req: request });
-  const url = request.nextUrl;
+const routes = {
+  protected: ["/dashboard", "/settings"],
+  public: ["/login", "/register"],
+};
 
-  //   not logged in and trying to access protected routes, then redirect to login page
-  if (!token && isProtectedRoutes.includes(url.pathname)) {
-    return NextResponse.redirect(new URL("/login", request.url));
+export default auth((req) => {
+  const { auth: isAuthenticated, nextUrl } = req;
+  const { pathname, origin } = nextUrl;
+
+  // Redirect unauthenticated users trying to access protected routes
+  if (!isAuthenticated && routes.protected.includes(pathname)) {
+    return Response.redirect(new URL("/login", origin));
   }
-
-  //   logged in and trying to access public routes, then redirect to dashboard page
-  if (token && isPublicRoutes.includes(url.pathname)) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  // Redirect authenticated users trying to access public routes
+  if (isAuthenticated && routes.public.includes(pathname)) {
+    return Response.redirect(new URL("/dashboard", origin));
   }
-}
+});
 
 export const config = {
-  matcher: ["/dashboard", "/settings", "/login", "/register"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

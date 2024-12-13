@@ -7,6 +7,7 @@ interface UserProps {
 }
 
 const DashboardHeader = ({ user }: UserProps) => {
+  if (!user) return null;
   const { email, name, image, role } = user;
   return (
     <div className="text-sm leading-6">
