@@ -25,6 +25,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    authProviderName: {
+      type: String,
+      enum: ["google", "github", "credentials"],
+      default: "credentials",
+    },
   },
   {
     timestamps: true,

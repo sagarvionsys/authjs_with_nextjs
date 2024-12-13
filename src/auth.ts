@@ -88,7 +88,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await dbConnect();
           const existingUser = await User.findOneAndUpdate(
             { email },
-            { name, image, authProviderId: id },
+            { name, image, authProviderId: id, authProviderName: "google" },
             { upsert: true, new: true }
           );
 
@@ -107,7 +107,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           await dbConnect();
           const existingUser = await User.findOneAndUpdate(
             { email },
-            { name, image, authProviderId: id },
+            { name, image, authProviderId: id, authProviderName: "github" },
             { upsert: true, new: true }
           );
 
