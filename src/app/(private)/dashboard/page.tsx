@@ -1,5 +1,7 @@
+"use client";
 import DashboardHeader from "@/components/DashboardHeader";
-import useGetSession from "@/lib/useGetSession";
+import useClientSession from "@/lib/useClientSession";
+
 import { AiOutlineArrowUp, AiOutlineArrowDown } from "react-icons/ai";
 
 const stats = [
@@ -23,12 +25,14 @@ const stats = [
   },
 ];
 
-const DashboardPage = async () => {
-  const session = await useGetSession();
+const DashboardPage = () => {
+  const { user, status } = useClientSession();
+
+  if (status === "loading") return <div>Loading...</div>;
 
   return (
     <>
-      <DashboardHeader user={session?.user} />
+      <DashboardHeader user={user} />
       <div className="h-screen dark:bg-gray-800 flex justify-center items-center">
         <section className="grid gap-6 md:grid-cols-3 p-4 md:p-8 max-w-5xl mx-auto w-full">
           {stats.map((stat, index) => (

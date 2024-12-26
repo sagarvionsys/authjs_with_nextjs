@@ -54,23 +54,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
 
-  pages: {
-    signIn: "/login",
-  },
-
   callbacks: {
+    // jwt is useful when we use on client side
     async jwt({ token, user }) {
       if (user) {
-        token._id = user._id;
-        token.image = user.image ?? "";
-        token.role = user.role ?? "user";
-        token.authProviderId = user.authProviderId ?? "";
+        token._id = user._id as string;
+        token.image = user.image as string;
+        token.role = user.role as string;
+        token.authProviderId = user.authProviderId as string;
       }
       return token;
     },
 
     async session({ session, token }) {
-      // Pass token fields to the session user object
+      // session is useful when we use on server side
       if (token) {
         session.user._id = token._id as string;
         session.user.image = token.image as string;
@@ -125,6 +122,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
       return false;
     },
+  },
+
+  pages: {
+    signIn: "/login",
   },
 
   session: {

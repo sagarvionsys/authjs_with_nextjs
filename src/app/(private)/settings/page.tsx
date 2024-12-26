@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import {
   Table,
@@ -9,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import useClientSession from "@/lib/useClientSession";
 
 const invoices = [
   {
@@ -55,6 +57,9 @@ const invoices = [
   },
 ];
 const SettingsPage = () => {
+  const { status } = useClientSession();
+  if (status === "loading") return <div>Loading...</div>;
+
   return (
     <div>
       <Table>
