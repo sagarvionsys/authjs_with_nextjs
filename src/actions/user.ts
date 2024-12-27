@@ -3,18 +3,23 @@
 import { signIn, signOut } from "@/auth";
 import dbConnect from "@/lib/db";
 import { User } from "@/models/user.model";
+import { loginSchema, registrationSchema } from "@/schema/validationSchema";
 import bcrypt from "bcryptjs";
+import { FieldValues } from "react-hook-form";
 
 // register for user
-const registerUser = async (formData: FormData) => {
+const registerUser = async (formData: FieldValues) => {
   try {
-    const userName = formData.get("userName") as string;
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    // API data validation
+    const Result = registrationSchema.safeParse(formData);
+    if (!Result.success) {
+      const errorMessages = Result.error.issues
+        .map((issue) => `${issue.message}`)
+        .join("\n");
+      throw new Error(errorMessages);
+    }
 
-    if (!userName || !email || !password)
-      throw new Error("All fields are required");
-
+    const { userName, email, password } = formData;
     await dbConnect();
 
     const isUserExists = await User.findOne({ email });
@@ -37,12 +42,17 @@ const registerUser = async (formData: FormData) => {
 };
 
 // login for user
-const login = async (formData: FormData) => {
+const login = async (formData: FieldValues) => {
   try {
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
+    const Result = loginSchema.safeParse(formData);
+    if (!Result.success) {
+      const errorMessages = Result.error.issues
+        .map((issue) => `${issue.message}`)
+        .join("\n");
+      throw new Error(errorMessages);
+    }
 
-    if (!email || !password) throw new Error("Email and password are required");
+    const { email, password } = formData;
 
     await signIn("credentials", {
       redirect: false,
@@ -53,8 +63,9 @@ const login = async (formData: FormData) => {
 
     return { message: "User logged successfully", status: 200 };
   } catch (error: any) {
-    // const error = err as CredentialsSignin;
-    throw new Error(error?.cause?.err || "Internal Server Error");
+    throw new Error(
+      error?.cause?.err || error.message || "internal server error"
+    );
   }
 };
 

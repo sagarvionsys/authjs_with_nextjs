@@ -4,22 +4,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { useForm, type FieldValues } from "react-hook-form";
 import Link from "next/link";
+import InputErrorField from "@/components/InputErrorField";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { registrationSchema } from "@/schema/validationSchema";
 import useRegisterUser from "@/features/useRegisterUser";
+// import useRegisterUser from "@/features/useRegisterUser";
 
 const RegisterPage = () => {
   const { registerUser, registerUserPending } = useRegisterUser();
+  const {
+    register,
+    reset,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: zodResolver(registrationSchema) });
 
-  // handle register user
-  const registerUserHandle = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    registerUser(formData, {
-      onSettled: () => {
-        form.reset();
-      },
-    });
+  const registerUserHandle = (data: FieldValues) => {
+    registerUser(data);
+    reset();
   };
 
   return (
@@ -28,7 +32,7 @@ const RegisterPage = () => {
         <h1 className="text-2xl font-semibold py-3">
           Welcome to Register Page
         </h1>
-        <form onSubmit={registerUserHandle}>
+        <form onSubmit={handleSubmit(registerUserHandle)}>
           <div className="mb-4">
             <Label
               htmlFor="userName"
@@ -37,12 +41,14 @@ const RegisterPage = () => {
               user name
             </Label>
             <Input
+              {...register("userName")}
               id="userName"
               placeholder="Enter your User Name"
               type="text"
               name="userName"
               className="mt-1 w-full border border-gray-300 rounded-lg p-2"
             />
+            <InputErrorField error={errors?.userName} />
           </div>
           <div className="mb-4">
             <Label
@@ -53,13 +59,14 @@ const RegisterPage = () => {
             </Label>
             <Input
               id="email"
+              {...register("email")}
               placeholder="Enter your email address"
               type="email"
               name="email"
               className="mt-1 w-full border border-gray-300 rounded-lg p-2"
             />
+            <InputErrorField error={errors?.email} />
           </div>
-
           <div className="mb-4">
             <Label
               htmlFor="password"
@@ -69,19 +76,23 @@ const RegisterPage = () => {
             </Label>
             <Input
               id="password"
+              {...register("password")}
               placeholder="**********"
               type="password"
               name="password"
               className="mt-1 w-full border border-gray-300 rounded-lg p-2"
             />
+            <InputErrorField error={errors?.password} />
           </div>
           <div className="flex items-center space-x-2 py-2">
-            <Checkbox id="terms" />
+            <Checkbox id="terms" {...register("terms")} />
             <Label htmlFor="terms">Accept terms and conditions</Label>
           </div>
+          <InputErrorField error={errors?.terms} />
 
+          {/* register button */}
           <Button
-            disabled={registerUserPending}
+            disabled={isSubmitting || registerUserPending}
             className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
           >
             {registerUserPending ? "Registering..." : "Register"}

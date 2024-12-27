@@ -9,25 +9,30 @@ import React from "react";
 import { FaGithub } from "react-icons/fa";
 import useLoginUser from "@/features/useLoginUser";
 import { oAuthLogin } from "@/actions/user";
+import { FieldValues, useForm } from "react-hook-form";
+import InputErrorField from "@/components/InputErrorField";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "@/schema/validationSchema";
 
 const LoginPage = () => {
   const { loginUser, loginUserPending } = useLoginUser();
+  const {
+    register,
+    reset,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: zodResolver(loginSchema) });
 
-  // handle login user
-  const loginUserHandle = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-    loginUser(formData, {
-      onSettled: () => form.reset(),
-    });
+  const loginUserHandle = (data: FieldValues) => {
+    loginUser(data);
+    reset();
   };
 
   return (
     <section className="flex h-screen items-center justify-center bg-gray-100">
       <div className="w-[20rem] bg-white p-6 rounded-lg shadow-md">
         <h1 className="text-2xl font-semibold py-3">Welcome to Login Page</h1>
-        <form onSubmit={loginUserHandle}>
+        <form onSubmit={handleSubmit(loginUserHandle)}>
           <div className="mb-4">
             <Label
               htmlFor="email"
@@ -37,11 +42,13 @@ const LoginPage = () => {
             </Label>
             <Input
               id="email"
+              {...register("email")}
               placeholder="Enter your email address"
               type="email"
               name="email"
               className="mt-1 w-full border border-gray-300 rounded-lg p-2"
             />
+            <InputErrorField error={errors?.email} />
           </div>
 
           <div className="mb-4">
@@ -53,15 +60,17 @@ const LoginPage = () => {
             </Label>
             <Input
               id="password"
+              {...register("password")}
               placeholder="**********"
               type="password"
               name="password"
               className="mt-1 w-full border border-gray-300 rounded-lg p-2"
             />
+            <InputErrorField error={errors?.password} />
           </div>
 
           <Button
-            disabled={loginUserPending}
+            disabled={isSubmitting || loginUserPending}
             className="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition"
           >
             {loginUserPending ? "Loading..." : "Login"}
